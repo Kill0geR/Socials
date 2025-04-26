@@ -1,0 +1,322 @@
+/* static/styles.css */
+
+/* ── Base color vars ── */
+:root {
+  --gradient-start:   #00ffe0;
+  --gradient-end:     #0078ff;
+  --bg-gradient:      radial-gradient(circle at top, #0d0d0d, #1a1a1a);
+  --btn-hover-shadow: #00ffe0;
+  --text-color:       #fff;
+}
+
+/* ── Global reset & transitions ── */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Orbitron', sans-serif;
+  background: var(--bg-gradient);
+  color: var(--text-color);
+  overflow: hidden;
+  transition: color 0.5s ease, background 0.5s ease;
+}
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 70px;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 30px;
+    box-sizing: border-box;
+}
+
+
+
+/* Logo */
+header .logo {
+    font-size: 24px;
+    font-weight: bold;
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-decoration: none;
+}
+
+/* Navigation */
+header nav {
+    display: flex;
+    gap: 20px;
+  margin-left: 500px;
+}
+
+/* Links */
+header nav a {
+    text-decoration: none;
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-size: 16px;
+    transition: color 0.3s;
+}
+
+header nav a:hover {
+    color: #555;
+    transition: color 0.3s;
+}
+
+
+nav {
+    display: flex;
+    gap: 20px;
+}
+
+header a:hover {
+  color: #555;
+  transition: color 0.3s;
+}
+
+/* ── Wrapper ── */
+.wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3rem;
+}
+
+/* ── Container ── */
+.container {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  width: 400px;
+  max-width: 90vw;           /* fluid on narrow screens */
+  padding: 2rem 1.5rem;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  box-shadow: 0 0 20px rgba(0,255,255,0.2);
+}
+
+/* ── Headings ── */
+h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  letter-spacing: 2px;
+}
+
+/* ── Form inputs & button ── */
+.form-control {
+  width: 100%;
+  padding: 1rem;             /* bigger touch area */
+  margin: 1rem 0;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.08);
+  color: var(--text-color);
+  font-size: 1rem;
+  outline: none;
+  box-sizing: border-box;
+  transition: background 0.5s ease, color 0.5s ease;
+}
+.form-control::placeholder {
+  color: #ccc;
+}
+
+.btn {
+  width: 100%;
+  padding: 1.2rem;           /* bigger tap target */
+  margin-top: 1rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  color: #000;
+  cursor: pointer;
+  transition: background 0.5s ease, box-shadow 0.5s ease;
+  box-sizing: border-box;
+}
+.btn:hover {
+  background: linear-gradient(135deg, var(--gradient-end), var(--gradient-start));
+  box-shadow: 0 0 20px var(--btn-hover-shadow);
+}
+
+/* ── Error message ── */
+.error-message {
+  margin-top: 1rem;
+  color: #ff4d4d;
+  font-weight: bold;
+}
+
+/* ── Format section animation ── */
+.form-section {
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transform: translateY(-10px);
+  transition: opacity 0.4s ease, max-height 0.4s ease, transform 0.4s ease;
+}
+.form-section.visible {
+  opacity: 1;
+  max-height: 300px;
+  transform: translateY(0);
+}
+
+/* ── Blob background ── */
+.blob {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  border-radius: 50%;
+  animation: morph 2s ease-in-out infinite, rotate 6s linear infinite;
+  filter: blur(150px);
+  opacity: 0.4;
+  transition: background 0.5s ease;
+  z-index: 0;
+}
+@keyframes morph {
+  0%,100% { border-radius:50% 50% 70% 30%/30% 40% 60% 70%; }
+  50%     { border-radius:30% 70% 50% 50%/60% 30% 70% 40%; }
+}
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Custom select ── */
+.custom-select-wrapper {
+  width: 100%;
+  max-width: 400px;
+  margin: 1rem 0;
+  user-select: none;
+}
+.custom-select {
+  width: 100%;
+  background: rgba(255,255,255,0.08);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+}
+.custom-select__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 1rem;
+  color: var(--text-color);
+  font-size: 1rem;
+  transition: color 0.5s ease;
+}
+.custom-select__trigger .arrow {
+  width: 0.7rem; height: 0.7rem;
+  border-left: 2px solid var(--text-color);
+  border-bottom: 2px solid var(--text-color);
+  transform: rotate(-45deg);
+  transition: transform 0.3s ease, border-color 0.5s ease;
+}
+.custom-select.open .arrow { transform: rotate(45deg); }
+
+.custom-options {
+  max-height: 0;
+  overflow: hidden;
+  background: rgba(26,26,26,0.95);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, max-height 0.3s ease, margin 0.3s ease, padding 0.3s ease;
+  margin: 0; padding: 0;
+}
+.custom-select.open .custom-options {
+  opacity: 1;
+  max-height: 200px;
+  margin-top: 0.2rem;
+  padding: 0.8rem 0;
+  pointer-events: auto;
+}
+.custom-option {
+  padding: 0.8rem 1rem;
+  color: var(--text-color);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.custom-option:hover { background: rgba(0,255,224,0.2); color: #000; }
+.custom-option.selected { background: rgba(0,255,224,0.4); color: #000; }
+
+/* ── Gradient overlay for crossfade ── */
+.gradient-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 1;
+  transition: opacity 0.5s ease;
+}
+
+/* ── Mobile responsiveness ── */
+@media (max-width: 768px) {
+  .wrapper {
+    flex-direction: column;  /* stack vertically */
+    gap: 2rem;
+  }
+  .container {
+    width: 90vw;
+    padding: 1.5rem 1rem;
+  }
+  h1 {
+    font-size: 2rem;
+  }
+  .form-control {
+    padding: 0.8rem;
+    font-size: 0.95rem;
+  }
+  .btn {
+    padding: 1rem;
+    font-size: 1rem;
+  }
+  .blob {
+    width: 400px;
+    height: 400px;
+  }
+}
+
+@media (max-width: 480px) {
+  .wrapper {
+    gap: 1.5rem;
+  }
+  .container {
+    padding: 1rem 0.8rem;
+  }
+  h1 {
+    font-size: 1.75rem;
+  }
+  .form-control {
+    padding: 0.6rem;
+    font-size: 0.9rem;
+  }
+  .btn {
+    padding: 0.8rem;
+    font-size: 0.9rem;
+  }
+  .blob {
+    width: 300px;
+    height: 300px;
+    filter: blur(120px);
+  }
+}
