@@ -6,15 +6,29 @@
   <title>Socials Downloader</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles/styles.css') }}">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='assets/icon-Photoroom.png') }}">
 </head>
 <body>
 
 <header>
-  <a href="#" class="logo">SOCIALS</a>
+  <a href="/" class="logo">SOCIALS</a>
   <nav>
-    <a href="#">Countries</a>
-    <a href="#">About us</a>
-    <a href="#">Contact</a>
+    <a href="/">AUTO</a>
+    <a href="/faq">FAQ</a>
+    <a class="dropbtn" id="burger-menu">
+        Platforms
+    </a>
+    <div id="dropdown-menu" class="dropdown-content">
+      <a href="/instagram" data-platform="instagram">Instagram</a>
+      <a href="/youtube" data-platform="youtube">Youtube</a>
+      <a href="/facebook" data-platform="facebook">Facebook</a>
+      <a href="/tiktok" data-platform="tiktok">TikTok</a>
+      <a href="/reddit" data-platform="reddit">Reddit</a>
+      <a href="/pinterest" data-platform="pinterest">Pinterest</a>
+      <a href="/twitter" data-platform="twitterReal">X</a>
+      <div style="border-top: 2px solid #0078ff;"></div>
+    </div>
+
   </nav>
 </header>
 
@@ -23,6 +37,7 @@
 
   <div class="container">
     <h1>SOCIALS</h1>
+    <div id="platformDisplay" class="platform-display"></div>
 
     <div id="errorMessage" class="error-message"></div>
 
@@ -30,20 +45,24 @@
       <input type="text" id="linkInput" name="link" class="form-control" placeholder="Insert your link here:">
 
       <div id="formatSection" class="form-section">
-<div class="custom-select-wrapper">
-  <div class="custom-select">
-    <span class="custom-select__trigger">
-      <span id="currentOption">Format wählen</span>
-      <div class="arrow"></div>
-    </span>
-    <div class="custom-options">
-      <!-- we’ll generate .custom-option items via JS -->
-    </div>
-  </div>
-</div>
+        <div class="custom-select-wrapper">
+          <div class="custom-select">
+            <span class="custom-select__trigger">
+              <span id="currentOption">Format wählen</span>
+              <div class="arrow"></div>
+            </span>
+            <div class="custom-options">
+
+            </div>
+          </div>
+        </div>
       </div>
 
       <button id="submitBtn" type="submit" class="btn">Download</button>
+        <div id="progressBar" class="progress-bar" style="display:none;">
+          <div id="progressFill" class="progress-fill"></div>
+        </div>
+
     </form>
   </div>
 
@@ -53,6 +72,8 @@
 
 
 <script type="text/javascript" src="{{ url_for('static', filename='javascript/script.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='javascript/burger.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='javascript/set_color.js') }}"></script>
 
 </body>
 </html>

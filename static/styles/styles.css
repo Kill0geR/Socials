@@ -75,6 +75,11 @@ header nav a:hover {
     transition: color 0.3s;
 }
 
+button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 
 nav {
     display: flex;
@@ -319,4 +324,151 @@ h1 {
     height: 300px;
     filter: blur(120px);
   }
+}
+.platform-display {
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+  opacity: 0;
+  transform: translateY(10px);
+  text-transform: capitalize;
+
+  /* gradient text like header */
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.platform-display.visible {
+  animation: fly-in 0.5s ease-out both;
+  animation-delay: 0.5s;
+}
+
+@keyframes fly-in {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-15px);
+  }
+}
+
+.progress-bar {
+  width: 100%;
+  background-color: #333;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 20px;
+  height: 20px;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+  transition: width 0.4s ease;
+}
+/* Platforms page specific tweaks */
+.platform-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.platform-item {
+  text-align: left;
+}
+
+.platform-display {
+  font-size: 1.75rem;
+  margin-bottom: 0.5rem;
+  opacity: 0;
+  transform: translateY(10px);
+  /* re-uses your gradient‐text + fly-in keyframes */
+}
+.platform-display.visible {
+  animation: fly-in 0.5s ease-out both;
+}
+
+.description {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.8;
+}
+
+.downloadables {
+  list-style: none;
+  padding-left: 0;
+}
+.downloadables li {
+  margin: 0.5rem 0;
+  padding: 0.6rem 1rem;
+  background: rgba(255,255,255,0.08);
+  border-radius: 12px;
+  backdrop-filter: blur(5px);
+  box-shadow: 0 0 10px rgba(0,255,255,0.1);
+}
+
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropbtn {
+    border: none;
+    cursor: pointer;
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-size: 16px;
+    transition: transform 0.3s ease-in-out;
+    z-index: 101;
+}
+
+.dropbtn:hover {
+    color: #fff;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #1a1a1a;
+    min-width: 300px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+    top: 100%;
+    right: 0;
+    flex-direction: column;
+}
+
+.dropdown-content a {
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-size: 16px;
+    transition: color 0.3s;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-content a:hover {
+    background-color: #6729B0;
+    color: white;
+}
+
+.dropdown:hover .dropdown-content {
+    display: flex;
+}
+
+.show {
+    display: flex;
+}
+
+.change {
+    transform: rotate(180deg);
 }

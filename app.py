@@ -11,8 +11,15 @@ import shutil
 import pyktok as pyk
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 import subprocess
+import yt_dlp
+import requests
+from io import BytesIO
+from bs4 import BeautifulSoup
+import praw
+import re
 
 
 def youtube_to_mp3(url):
@@ -21,7 +28,7 @@ def youtube_to_mp3(url):
         video = yt.streams.filter(only_audio=True).first()
         video_file = video.download(output_path="downloads", filename='temp_video')
 
-        get_song_name = f'downloads/{uuid.uuid4()}.mp3'
+        get_song_name = f'downloads/Audios/{uuid.uuid4()}.mp3'
         video_clip = AudioFileClip(video_file)
         video_clip.write_audiofile(get_song_name)
 
@@ -34,8 +41,158 @@ def youtube_to_mp3(url):
     print("Conversion completed successfully!")
 
 
+def get_twitter_profile_picture(url):
+    options = Options()
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+
+    driver = webdriver.Chrome(options=options)
+
+    driver.get(url)
+    time.sleep(1.5)
+
+    try:
+        links = driver.find_elements(By.TAG_NAME, "a")
+
+        photo_link = None
+        for link in links:
+            href = link.get_attribute("href")
+            if href and href.endswith("/photo"):
+                photo_link = link
+                break
+
+        if not photo_link:
+            print("Kein Link mit /photo gefunden.")
+            return
+
+        img = photo_link.find_element(By.TAG_NAME, "img")
+        img_url = img.get_attribute("src")
+        print(f"Bild-URL gefunden: {img_url}")
+
+        response = requests.get(img_url)
+        filename = f"downloads/Profiles/{uuid.uuid4()}.jpg"
+        with open(filename, "wb") as f:
+            f.write(response.content)
+
+        return filename
+
+    except Exception as e:
+        print(f"Fehler: {e}")
+    finally:
+        driver.quit()
+
+
+def download_twitter_videos(url):
+    got_video = False
+    got_image = False
+
+    video_file = f'downloads/Videos/{uuid.uuid4()}.mp4'
+
+    try:
+        try:
+            ydl_opts = {
+                'format': 'bv*+ba/best',
+                'merge_output_format': 'mp4',
+                'outtmpl': video_file,
+                'postprocessors': [{
+                    'key': 'FFmpegVideoConvertor',
+                    'preferedformat': 'mp4',
+                }]
+            }
+
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                ydl.download([url])
+                got_video = True
+
+        except yt_dlp.utils.DownloadError as e:
+            print(e)
+
+        finally:
+            # Headless Chrome konfigurieren
+            options = Options()
+            options.add_argument("--headless")
+            options.add_argument("--disable-gpu")
+            options.add_argument("--no-sandbox")
+
+            # Starte den Browser
+            # driver = webdriver.Chrome(options=options, service=ChromeDriverManager().install())
+            driver = webdriver.Chrome(options=options)
+            driver.get(url)
+            time.sleep(1.5)
+
+            images = driver.find_elements("tag name", "img")
+            media_urls = [img.get_attribute("src") for img in images if "pbs.twimg.com/media" in img.get_attribute("src")]
+
+            driver.quit()
+
+            print(media_urls)
+            zip_buffer = BytesIO()
+            # Bild speichern
+            if media_urls:
+                got_image = True
+                if len(media_urls) == 1 and not got_video:
+                    filename = f"downloads/Images/{uuid.uuid4()}.jpg"
+                    with open(filename, "wb") as f:
+                        content = requests.get(media_urls[0]).content
+                        f.write(content)
+
+                    return filename
+
+                else:
+                    with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+                        for idx, url in enumerate(media_urls):
+                            img_data = requests.get(url).content
+                            zip_file.writestr(f"bild_{idx + 1}.jpg", img_data)
+                            print(f"Bild {idx + 1} hinzugefügt: {url}")
+
+            if got_video and not got_image:
+                return video_file
+
+            elif got_image and got_video:
+                with open(video_file, "rb") as f:
+                    data = f.read()
+
+                with zipfile.ZipFile(zip_buffer, "a") as zip_file:
+                    zip_file.writestr(video_file.split("/")[-1], data)
+
+                os.remove(video_file)
+
+            if True in [got_video, got_image]:
+                zip_filename = f"downloads/Images/{uuid.uuid4()}.zip"
+                with open(zip_filename, "wb") as f:
+                    f.write(zip_buffer.getvalue())
+
+                return zip_filename
+
+            return False
+
+    except Exception as e:
+        print(f"Fehler: {e}")
+        return False
+
+
+def download_reddit_videos(url):
+    filename = f'downloads/Videos/{uuid.uuid4()}.mp4'
+    ydl_opts = {
+        'format': 'bv*+ba/best',
+        'merge_output_format': 'mp4',
+        'outtmpl': filename,
+        'postprocessors': [{
+            'key': 'FFmpegVideoConvertor',
+            'preferedformat': 'mp4',
+        }]
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([url])
+
+    return filename
+
+
 def download_insta_images(post_url):
     try:
+        return_filename = ""
         loader = instaloader.Instaloader()
 
         target_file = uuid.uuid4()
@@ -57,16 +214,29 @@ def download_insta_images(post_url):
             else:
                 os.remove(f"{target_file}/{each_file}")
 
-        zipname = f"{real_folder}/{uuid.uuid4()}.zip"
+        if len(valid_files) > 1:
+            zipname = f"{real_folder}/{uuid.uuid4()}.zip"
 
-        with zipfile.ZipFile(zipname, 'w') as zipf:
-            for file in valid_files:
-                zipf.write(file, arcname=file.split('/')[-1])
-                os.remove(file)
+            with zipfile.ZipFile(zipname, 'w') as zipf:
+                for file in valid_files:
+                    zipf.write(file, arcname=file.split('/')[-1])
+                    os.remove(file)
+
+            return_filename = zipname
+
+        else:
+            new_filename = f"downloads/Images/{uuid.uuid4()}.jpeg"
+            with open(new_filename, "wb") as f:
+                with open(valid_files[0], "rb") as file:
+                    content = file.read()
+
+                f.write(content)
+                os.remove(valid_files[0])
+                return_filename = new_filename
 
         os.rmdir(str(target_file))
 
-        return zipname
+        return return_filename
 
     except Exception as e:
         print(e)
@@ -141,7 +311,10 @@ def download_tiktok(url):
 
 def download_tiktok_profile_picture(link):
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+
     driver = webdriver.Chrome(options=options)
 
     driver.get(link)
@@ -167,7 +340,7 @@ def download_tiktok_profile_picture(link):
         return False
 
 
-def youtube_to_mp4(url, output_path='downloads'):
+def youtube_to_mp4(url, output_path='downloads/Videos'):
     try:
         yt = YouTube(url)
         video_stream = yt.streams.filter(res="1080p", mime_type="video/mp4", progressive=False).first()
@@ -200,11 +373,297 @@ def youtube_to_mp4(url, output_path='downloads'):
 
         print(f"Done! File saved as: {final_path}")
 
-        return f"downloads/{filename}"
+        return f"{output_path}/{filename}"
 
     except Exception as e:
         print(e)
         return False
+
+
+def download_facebook_images(post_url):
+    try:
+        options = webdriver.ChromeOptions()
+        options.add_argument('--headless')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+
+        driver = webdriver.Chrome(options=options)
+        driver.get(post_url)
+
+        time.sleep(3)
+        img_elements = driver.find_elements(By.XPATH, '//img[contains(@src, "scontent")]')
+        image_urls = [img.get_attribute("src") for img in img_elements]
+
+        if not image_urls:
+            print("Keine Bilder gefunden.")
+            return
+
+        if len(image_urls) > 1:
+            zip_buffer = BytesIO()
+            with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+                for idx, url in enumerate(set(image_urls)):
+                    img_data = requests.get(url).content
+                    zip_file.writestr(f"bild_{idx + 1}.jpg", img_data)
+                    print(f"Bild {idx + 1} hinzugefügt: {url}")
+
+            # ZIP-Datei speichern
+            filename = f"downloads/Images/{uuid.uuid4()}.zip"
+            with open(filename, "wb") as f:
+                f.write(zip_buffer.getvalue())
+
+            return filename
+
+        else:
+            new_filename = f"downloads/Images/{uuid.uuid4()}.jpg"
+            with open(new_filename, "wb") as f:
+                f.write(requests.get(image_urls[0]).content)
+
+            return new_filename
+
+
+    except Exception as e:
+        print(f"Fehler bei Bilder {e}")
+        driver.quit()
+        return
+
+
+def download_facebook_reels(url):
+    filename = f'downloads/Videos/{uuid.uuid4()}.mp4'
+    ydl_opts = {
+        'outtmpl': filename
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([url])
+    return filename
+
+
+def get_facebook_profile_picture(url):
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0"
+        }
+
+        response = requests.get(url, headers=headers)
+
+        if response.status_code != 200:
+            print("Profil nicht gefunden oder Zugriff verweigert.")
+            return
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+        og_image = soup.find('meta', property='og:image')
+
+        if og_image:
+            image_url = og_image['content']
+            print("Profilbild gefunden:", image_url)
+
+            # Bild herunterladen
+            image_response = requests.get(image_url)
+            filename = f"downloads/Profiles/{uuid.uuid4()}.jpg"
+            with open(filename, 'wb') as f:
+                f.write(image_response.content)
+
+            return filename
+
+        else:
+            print("Kein öffentliches Profilbild gefunden.")
+
+    except Exception as e:
+        print(e)
+
+
+def download_media(url, title):
+    end = f'.{url.split(".")[-1]}'
+    filename = None
+    if url.endswith(('.jpg', '.jpeg', '.png', '.gif')):
+        response = requests.get(url)
+        image_file = f"downloads/Images/{uuid.uuid4()}{end}"
+        print(image_file)
+        with open(image_file, 'wb') as f:
+            f.write(response.content)
+        print(f"Downloaded image: {title}")
+        filename = image_file
+
+    elif url.endswith(('.mp4$%&$2', '.webm')):
+        link = url.replace(".mp4$%&$2", "")
+        filename = download_reddit_videos(link)
+
+    else:
+        print(f"Unsupported media type: {title}")
+
+    return filename
+
+
+def download_reddit_post(post_url):
+    post = reddit.submission(url=post_url)
+    title = post.title.replace(" ", "_").replace("/", "_")
+
+    if post.is_video and 'reddit_video' in post.media:
+        video_url = f"{post.media['reddit_video']['dash_url']}.mp4$%&$2"
+        print(post.media['reddit_video'])
+
+        return download_media(video_url, title)
+
+    elif post.url.endswith(('.jpg', '.jpeg', '.png', '.gif')):
+        return download_media(post.url, title)
+
+    elif post.is_gallery:
+        zip_buffer = BytesIO()
+        media_metadata = post.media_metadata
+        image_urls = []
+        for item in post.gallery_data["items"]:
+            media_id = item["media_id"]
+            if media_id in media_metadata:
+                image_url = media_metadata[media_id]["s"]["u"].replace("&amp;", "&")
+                image_urls.append(image_url)
+
+        with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+            for idx, url in enumerate(image_urls):
+                img_data = requests.get(url).content
+                zip_file.writestr(f"bild_{idx + 1}.jpg", img_data)
+                print(f"Bild {idx + 1} hinzugefügt: {url}")
+
+        zip_filename = f"downloads/Images/{uuid.uuid4()}.zip"
+        with open(zip_filename, "wb") as f:
+            f.write(zip_buffer.getvalue())
+
+        print(f"✅ ZIP-Datei gespeichert: {zip_filename}")
+        return zip_filename
+
+    else:
+        print(f"Unsupported media: {title} - {post.url}")
+        return None
+
+
+def get_reddit_profile_picture(url):
+    try:
+        if "/r/" not in url:
+            username = url.split("user/")[-1].strip("/")
+            user = reddit.redditor(username)
+
+            avatar_url = user.icon_img
+
+            response = requests.get(avatar_url)
+
+            filename = f"downloads/Profiles/{uuid.uuid4()}.jpg"
+
+            with open(filename, "wb") as f:
+                f.write(response.content)
+
+            return filename
+
+        else:
+            changed_url = f"{url.rstrip('/')}/about.json"
+            headers = {"User-Agent": "Mozilla/5.0"}
+
+            response = requests.get(changed_url, headers=headers)
+            data = response.json()
+
+            icon_url = data["data"].get("icon_img") or data["data"].get("community_icon")
+            if icon_url:
+                icon_url = icon_url.split("?")[0]
+
+                img_response = requests.get(icon_url)
+                subreddit_filename = f"downloads/Profiles/{uuid.uuid4()}.jpg"
+
+                with open(subreddit_filename, "wb") as f:
+                    f.write(img_response.content)
+
+                return subreddit_filename
+            else:
+                print("Kein Profilbild gefunden.")
+                return False
+
+
+
+    except Exception as e:
+        print(e)
+        return None
+
+
+def download_pin_image(url):
+
+    filename = f"downloads/Images/{uuid.uuid4()}.jpg"
+    print(filename)
+    r = requests.get(url, stream=True)
+    with open(filename, 'wb') as f:
+        for chunk in r.iter_content(8192):
+            f.write(chunk)
+
+    return filename
+
+
+def download_pinterest_video(video_url):
+    print(f"🎥 Lade Video herunter mit yt-dlp: {video_url}")
+    filename = f'downloads/Videos/{uuid.uuid4()}.mp4'
+    ydl_opts = {
+        'outtmpl': filename,
+        'merge_output_format': 'mp4',
+        'quiet': False
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([video_url])
+    print("✅ Video fertig")
+    return filename
+
+
+def get_pinterest_media(pinterest_url):
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
+
+    response = requests.get(pinterest_url, headers=headers)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    filename = None
+    video_found = False
+
+    video_tag = soup.find("video")
+    if video_tag and video_tag.get("src"):
+        video_found = True
+        video_url = video_tag["src"]
+        print("🎬 Video gefunden")
+        filename = download_pinterest_video(video_url)
+
+
+    img_tag = soup.find("img", {"src": re.compile(r'^https://i\.pinimg\.com')})
+    if img_tag and img_tag.get("src") and not video_found:
+        image_url = img_tag["src"]
+        print("🖼️ Bild gefunden")
+        filename = download_pin_image(image_url)
+
+    return filename
+    print("⚠️ Kein Bild oder Video gefunden")
+
+
+def download_profile_picture_pinterest(profile_url):
+    try:
+        headers = {"User-Agent": "Mozilla/5.0"}
+        response = requests.get(profile_url, headers=headers)
+
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        # Suche nach Profilbild
+        img_tag = soup.find("img", {"src": re.compile(r'https://i\.pinimg\.com/.*\.jpg')})
+        if img_tag and img_tag.get("src"):
+            img_url = img_tag["src"]
+            filename = f"downloads/Profiles/{uuid.uuid4()}.jpg"
+            print(f"🖼️ Profilbild gefunden: {img_url}")
+
+            # Download
+            img_data = requests.get(img_url).content
+            with open(filename, "wb") as f:
+                f.write(img_data)
+            print(f"✅ Gespeichert als {filename}")
+            return filename
+
+        else:
+            print("⚠️ Kein Profilbild gefunden")
+            return None
+
+    except Exception as e:
+        print(e)
+        return None
 
 
 app = Flask(__name__)
@@ -213,6 +672,49 @@ app = Flask(__name__)
 @app.route("/")
 def index():
     return render_template("index.html")
+
+
+reddit = praw.Reddit(
+    client_id='ueIZdyYqPDQsm8nywfplYQ',
+    client_secret='40L4TUjnozo8ldmGC1BM7M2U3VMClQ',
+    user_agent='script:media.downloader:v1.0 (by u/Abdul_TikTok314 )'
+)
+
+
+available_platforms = [
+    {
+        "platform": "Instagram",
+        "description": "From Instagram you can download",
+        "downloadables": [
+            "Profile picture",
+            "Reels",
+            "Images",
+            "Videos"
+        ]
+    },
+    {
+        "platform": "TikTok",
+        "description": "From TikTok you can download",
+        "downloadables": [
+            "Profile picture",
+            "Videos"
+        ]
+    },
+    {
+        "platform": "YouTube",
+        "description": "From YouTube you can download videos in formats",
+        "formats": [
+            "mp4",
+            "mp3"
+        ]
+    }
+]
+
+
+@app.route("/<platform>")
+def platforms(platform):
+    if platform in ["instagram", "facebook", "pinterest", "reddit", "youtube", "twitter", "tiktok"]:
+        return render_template(f"{platform}.html")
 
 
 @app.route("/<path:filename>")
@@ -230,7 +732,11 @@ def download(platform):
     all_functions = {"insta_profile_picture": download_instagram_profile_picture, "yt_mp4": youtube_to_mp4,
                      "tik_profile_picture": download_tiktok_profile_picture, "insta_reels": insta_download_reel,
                      "tik_videos": download_tiktok, "yt_mp3": youtube_to_mp3,
-                     "insta_photos": download_insta_images}
+                     "insta_photos": download_insta_images, "twitter_videos": download_twitter_videos,
+                     "twitter_profile_picture": get_twitter_profile_picture, "face_profile_picture": get_facebook_profile_picture,
+                     "face_reels": download_facebook_reels, "face_photos": download_facebook_images, "reddit_profile_pic": get_reddit_profile_picture,
+                     "reddit_photos": download_reddit_post, "pin_profile_pic": download_profile_picture_pinterest,
+                     "pin_media": get_pinterest_media}
 
     if format in all_functions:
         filename = all_functions[format](link)
