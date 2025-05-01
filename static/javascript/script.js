@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
       optionEl.textContent = opt.text;
       selectEl.appendChild(optionEl);
     });
-    current.textContent = 'Format wählen';
+    current.textContent = 'Choose format';
     selectEl.value = '';
   }
 
@@ -110,10 +110,26 @@ document.addEventListener('DOMContentLoaded', () => {
     wrapper.querySelector('.custom-select').classList.remove('open');
   });
 
+  const clearInputBtn = document.getElementById('clearInputBtn');
+
+  clearInputBtn.addEventListener('click', () => {
+    linkInput.value = '';
+    clearInputBtn.style.display = 'none';
+    window.location.href = "/";
+  });
+
   linkInput.addEventListener('input', () => {
     const url      = linkInput.value.trim();
     const platform = detectPlatform(url) || 'default';
     const format   = detectFormat(platform, url) || 'default';
+
+    if (platformNames[platform]) {
+      clearInputBtn.style.display = 'block';
+    }
+
+    else {
+      clearInputBtn.style.display = 'none';
+    }
 
     const displayName = platformNames[platform] || '';
     if (displayName) {
@@ -141,26 +157,26 @@ document.addEventListener('DOMContentLoaded', () => {
       if (format !== 'default') {
         selectEl.value = format;
         const opt = formats[platform].find(opt => opt.value === format);
-        current.textContent = opt ? opt.text : 'Format wählen';
+        current.textContent = opt ? opt.text : 'Choose format';
         optionsContainer.querySelector(`[data-value="${format}"]`)?.classList.add('selected');
       }
     }
     else {
       formatSection.classList.remove('visible');
-      errorMessage.textContent = 'Unbekannte Plattform.';
+      errorMessage.textContent = 'Unknown Platform';
     }
   });
 });
 
 const formats = {
-  instagram: [ {value:'insta_profile_picture',text:'Profilbild'}, {value:'insta_reels',text:'Reels'}, {value:'insta_photos',text:'Fotos/Video'} ],
+  instagram: [ {value:'insta_profile_picture',text:'Profile picture'}, {value:'insta_reels',text:'Reels'}, {value:'insta_photos',text:'Photos/Video'} ],
   youtube:   [ {value:'yt_mp4',text:'MP4 (Video)'}, {value:'yt_mp3',text:'MP3 (Audio)'} ],
-  facebook:  [ {value:'face_profile_picture',text:'Profilbild'}, {value:'face_photos',text:'Fotos/Beiträge'}, {value:'face_reels',text:'Reels/Video'} ],
-  tiktok:    [ {value:'tik_profile_picture',text:'Profilbild'}, {value:'tik_videos',text:'Videos'} ],
-  twitter:    [ {value:'twitter_videos',text:'Video/Fotos'}, {value:'twitter_profile_picture',text:'Profilbild'} ],
-  twitterReal:    [ {value:'twitter_videos',text:'Video/Fotos'}, {value:'twitter_profile_picture',text:'Profilbild'} ],
-  reddit:    [ {value:'reddit_profile_pic',text:'Profilbild'}, {value:'reddit_photos',text:'Fotos/Video'}],
-  pinterest:    [ {value:'pin_profile_pic',text:'Profilbild'}, {value:'pin_media',text:'Foto/Video'}]
+  facebook:  [ {value:'face_profile_picture',text:'Profile picture'}, {value:'face_photos',text:'Photos/Posts'}, {value:'face_reels',text:'Reels/Video'} ],
+  tiktok:    [ {value:'tik_profile_picture',text:'Profile picture'}, {value:'tik_videos',text:'Videos'} ],
+  twitter:    [ {value:'twitter_videos',text:'Video/Photos'}, {value:'twitter_profile_picture',text:'Profile picture'} ],
+  twitterReal:    [ {value:'twitter_videos',text:'Video/Photos'}, {value:'twitter_profile_picture',text:'Profile picture'} ],
+  reddit:    [ {value:'reddit_profile_pic',text:'Profile picture'}, {value:'reddit_photos',text:'Photos/Video'}],
+  pinterest:    [ {value:'pin_profile_pic',text:'Profile picture'}, {value:'pin_media',text:'Foto/Video'}]
 };
 
 function detectPlatform(u) {
@@ -199,7 +215,7 @@ function detectFormat(platform, link) {
 
     if (!(path === "share" || path === "reels" || path === "reel")) {
       return "face_profile_picture";
-    } else if (path ==='reels' || path ==='reel' || parts.at(-1).split("/")[1] === "v") {
+    } else if (path ==='reels' || path ==='reel' || parts.at(-1).split("/")[1] === "v" || link.includes("/r/")) {
       return "face_reels";
     } else {
       return 'face_photos';
@@ -224,7 +240,7 @@ function detectFormat(platform, link) {
     }
   }
 
-  if (platform === "pinterest") {
+  if (platform === "pinterest" && link.includes("pinterest")) {
     if (link.includes("/pin/")) {
       return 'pin_media';
     } else {
@@ -251,7 +267,7 @@ function validateInput() {
   const e = document.getElementById('errorMessage');
   const f = document.getElementById('currentOption').textContent;
   console.log(f);
-  if (f === "Format wählen") { e.textContent = 'Please select a format'; return false; }
+  if (f === "Choose format") { e.textContent = 'Please select a format'; return false; }
 
   if (!v) { e.textContent = 'Please insert an URL'; return false; }
   e.textContent = ''; return true;
@@ -262,16 +278,22 @@ const form = document.getElementById('mainForm');
 const progressBar = document.getElementById('progressBar');
 const progressFill = document.getElementById('progressFill');
 const submitButton = document.getElementById('submitBtn');
+const clearButton = document.getElementById('clearInputBtn');
+
+
 
 form.addEventListener('submit', (event) => {
   const link = document.getElementById('linkInput').value.trim();
   const format = document.getElementById('currentOption').textContent;
 
-  if (link !== "" && format !== "Format wählen") {
+  if (link !== "" && format !== "Choose format") {
     event.preventDefault();
 
   submitButton.disabled = true;
   submitButton.classList.add('disabled');
+
+  clearButton.disabled = true;
+  clearButton.classList.add('disabled');
 
   const formData = new FormData(form);
 
@@ -305,6 +327,9 @@ form.addEventListener('submit', (event) => {
 
       submitButton.disabled = false;
       submitButton.classList.remove('disabled');
+
+      clearButton.disabled = false;
+      clearButton.classList.remove('disabled');
     }, 300);
   })
   .catch(error => {
@@ -313,6 +338,10 @@ form.addEventListener('submit', (event) => {
 
     submitButton.disabled = false;
     submitButton.classList.remove('disabled');
+
+    clearButton.disabled = false;
+    clearButton.classList.remove('disabled');
   });
   }
 });
+

@@ -3,11 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Socials Downloader</title>
+  <title>Fehler – Socials Downloader</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles/styles.css') }}">
   <link rel="shortcut icon" href="{{ url_for('static', filename='assets/icon-Photoroom.png') }}">
+  <style>
+    .error-container {
+      text-align: center;
+      padding: 100px 20px;
+      color: white;
+    }
+
+    .error-container h1 {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    .error-container p {
+      font-size: 1.2rem;
+      margin-bottom: 30px;
+    }
+
+
+  </style>
 </head>
 <body>
 
@@ -32,7 +51,6 @@
   <div class="burger" id="burger-icon">&#9776;</div>
 
   <div class="mobile-menu" id="mobile-menu">
-    <a href="/" style="color: #FFF;">Auto</a>
     <a href="/faq" data-platform="faq">FAQ</a>
     <a href="/instagram" data-platform="instagram">Instagram</a>
     <a href="/youtube" data-platform="youtube">Youtube</a>
@@ -43,51 +61,15 @@
     <a href="/twitter" data-platform="twitterReal">X</a>
   </div>
 </header>
-
-
-<div class="wrapper">
-
-  <div class="container">
-    <h1>SOCIALS</h1>
-    <div id="platformDisplay" class="platform-display">
-
-    </div>
-
-    <div id="errorMessage" class="error-message"></div>
-
-    <form id="mainForm" method="POST" action="/download/automatic" onsubmit="return validateInput(this);">
-      <input type="text" id="linkInput" name="link" class="form-control" placeholder="Insert your link here:">
-
-      <div id="formatSection" class="form-section">
-        <div class="custom-select-wrapper">
-          <div class="custom-select">
-            <span class="custom-select__trigger">
-              <span id="currentOption">Format wählen</span>
-              <div class="arrow"></div>
-            </span>
-            <div class="custom-options">
-
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <button id="submitBtn" type="submit" class="btn">Download</button>
-        <div id="progressBar" class="progress-bar" style="display:none;">
-          <div id="progressFill" class="progress-fill"></div>
-        </div>
-
-    </form>
-  </div>
-
-  <div class="blob"></div>
-
+<div class="error-container">
+  <h1>Sorry!</h1>
+  <p>Something went wrong. Please check the link or try again later.</p>
+  <a href="/" type="submit" class="btn">Back to home</a>
 </div>
 
-
-<script type="text/javascript" src="{{ url_for('static', filename='javascript/script_red.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('static', filename='javascript/burger.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='javascript/set_color.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='javascript/script.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='javascript/burger.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='javascript/set_color_phone.js') }}"></script>
 
 </body>

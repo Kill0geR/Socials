@@ -112,8 +112,8 @@ def download_twitter_videos(url):
             # Headless Chrome konfigurieren
             options = Options()
             options.add_argument("--headless")
-            options.add_argument("--disable-gpu")
             options.add_argument("--no-sandbox")
+            options.add_argument("--disable-dev-shm-usage")
 
             # Starte den Browser
             # driver = webdriver.Chrome(options=options, service=ChromeDriverManager().install())
@@ -294,14 +294,15 @@ def insta_download_reel(reel_url):
 
 def download_tiktok(url):
     try:
-        change_dir = f"downloads/TikTok_Video"
+        change_dir = f"downloads/TikTok_Video/{uuid.uuid4()}"
+        os.mkdir(change_dir)
         os.chdir(change_dir)
 
-        pyk.specify_browser('chrome')
+        # pyk.specify_browser('chrome')
 
         pyk.save_tiktok(url, True)
         filename = f"{change_dir}/{os.listdir()[0]}"
-        os.chdir("../..")
+        os.chdir("../../..")
         return filename
 
     except Exception as e:
@@ -681,40 +682,23 @@ reddit = praw.Reddit(
 )
 
 
-available_platforms = [
-    {
-        "platform": "Instagram",
-        "description": "From Instagram you can download",
-        "downloadables": [
-            "Profile picture",
-            "Reels",
-            "Images",
-            "Videos"
-        ]
-    },
-    {
-        "platform": "TikTok",
-        "description": "From TikTok you can download",
-        "downloadables": [
-            "Profile picture",
-            "Videos"
-        ]
-    },
-    {
-        "platform": "YouTube",
-        "description": "From YouTube you can download videos in formats",
-        "formats": [
-            "mp4",
-            "mp3"
-        ]
-    }
-]
-
-
 @app.route("/<platform>")
 def platforms(platform):
-    if platform in ["instagram", "facebook", "pinterest", "reddit", "youtube", "twitter", "tiktok"]:
+    if platform in ["instagram", "facebook", "pinterest", "reddit", "youtube", "twitter", "tiktok", "faq"]:
         return render_template(f"{platform}.html")
+
+    else:
+        return render_template("404.html")
+
+
+@app.errorhandler(500)
+def internal_server_error(error):
+    return render_template('error.html'), 500
+
+
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('404.html'), 404
 
 
 @app.route("/<path:filename>")
@@ -740,7 +724,10 @@ def download(platform):
 
     if format in all_functions:
         filename = all_functions[format](link)
-        print(filename)
+
+        if not filename:
+            return render_template("error.html")
+
         return redirect(url_for("download_file", filename=filename))
 
 
@@ -750,4 +737,4 @@ def download(platform):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", debug=True)

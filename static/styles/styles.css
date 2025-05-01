@@ -17,7 +17,7 @@ html, body {
   font-family: 'Orbitron', sans-serif;
   background: var(--bg-gradient);
   color: var(--text-color);
-  overflow: hidden;
+  overflow-x: hidden;
   transition: color 0.5s ease, background 0.5s ease;
 }
 body {
@@ -281,7 +281,7 @@ h1 {
     gap: 2rem;
   }
   .container {
-    width: 90vw;
+    width: 80vw;
     padding: 1.5rem 1rem;
   }
   h1 {
@@ -470,5 +470,59 @@ h1 {
 }
 
 .change {
-    transform: rotate(180deg);
+}
+
+.burger {
+  display: none;
+  font-size: 28px;
+  color: white;
+  cursor: pointer;
+  z-index: 1001;
+}
+
+.mobile-menu {
+  display: none;
+    position: absolute;
+    background-color: #1a1a1a;
+    min-width: 200px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+    top: 100%;
+    right: 0;
+    flex-direction: column;
+}
+
+.mobile-menu a {
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-size: 16px;
+    transition: color 0.3s;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+
+
+@media (max-width: 830px) {
+  #currentOption {
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+  .nav-desktop {
+    display: none;
+  }
+
+  .burger {
+    display: block;
+  }
+
+  .mobile-menu.show {
+    display: flex;
+  }
 }
