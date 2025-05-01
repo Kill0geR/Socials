@@ -20,6 +20,7 @@ from io import BytesIO
 from bs4 import BeautifulSoup
 import praw
 import re
+import threading
 
 
 def youtube_to_mp3(url):
@@ -33,6 +34,9 @@ def youtube_to_mp3(url):
         video_clip.write_audiofile(get_song_name)
 
         os.remove(video_file)
+
+        delete_file_after_delay(get_song_name)
+
         return get_song_name
     except Exception as e:
         print(e)
@@ -74,6 +78,8 @@ def get_twitter_profile_picture(url):
         filename = f"downloads/Profiles/{uuid.uuid4()}.jpg"
         with open(filename, "wb") as f:
             f.write(response.content)
+
+        delete_file_after_delay(filename)
 
         return filename
 
@@ -147,6 +153,7 @@ def download_twitter_videos(url):
                             print(f"Bild {idx + 1} hinzugefügt: {url}")
 
             if got_video and not got_image:
+                delete_file_after_delay(video_file)
                 return video_file
 
             elif got_image and got_video:
@@ -162,6 +169,8 @@ def download_twitter_videos(url):
                 zip_filename = f"downloads/Images/{uuid.uuid4()}.zip"
                 with open(zip_filename, "wb") as f:
                     f.write(zip_buffer.getvalue())
+
+                delete_file_after_delay(zip_filename)
 
                 return zip_filename
 
@@ -186,6 +195,8 @@ def download_reddit_videos(url):
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
+
+    delete_file_after_delay(filename)
 
     return filename
 
@@ -236,6 +247,8 @@ def download_insta_images(post_url):
 
         os.rmdir(str(target_file))
 
+        delete_file_after_delay(return_filename)
+
         return return_filename
 
     except Exception as e:
@@ -257,6 +270,9 @@ def download_instagram_profile_picture(url):
     if response.status_code == 200:
         with open(filename, 'wb') as file:
             file.write(response.content)
+
+        delete_file_after_delay(filename)
+
         return filename
     else:
         return False
@@ -286,6 +302,8 @@ def insta_download_reel(reel_url):
 
         os.rmdir(str(target_folder))
 
+        delete_file_after_delay(mp4_file)
+
         return f"{real_folder}/{mp4_file}"
     except Exception as e:
         print(e)
@@ -303,6 +321,9 @@ def download_tiktok(url):
         pyk.save_tiktok(url, True)
         filename = f"{change_dir}/{os.listdir()[0]}"
         os.chdir("../../..")
+
+        delete_file_after_delay(filename)
+
         return filename
 
     except Exception as e:
@@ -331,6 +352,9 @@ def download_tiktok_profile_picture(link):
         if response.status_code == 200:
             with open(filename, 'wb') as f:
                 f.write(response.content)
+
+            delete_file_after_delay(filename)
+
             return filename
         else:
             return False
@@ -374,7 +398,9 @@ def youtube_to_mp4(url, output_path='downloads/Videos'):
 
         print(f"Done! File saved as: {final_path}")
 
-        return f"{output_path}/{filename}"
+        delete_file_after_delay(final_path)
+
+        return final_path
 
     except Exception as e:
         print(e)
@@ -412,12 +438,16 @@ def download_facebook_images(post_url):
             with open(filename, "wb") as f:
                 f.write(zip_buffer.getvalue())
 
+            delete_file_after_delay(filename)
+
             return filename
 
         else:
             new_filename = f"downloads/Images/{uuid.uuid4()}.jpg"
             with open(new_filename, "wb") as f:
                 f.write(requests.get(image_urls[0]).content)
+
+            delete_file_after_delay(new_filename)
 
             return new_filename
 
@@ -436,6 +466,9 @@ def download_facebook_reels(url):
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
+
+    delete_file_after_delay(filename)
+
     return filename
 
 
@@ -464,6 +497,8 @@ def get_facebook_profile_picture(url):
             with open(filename, 'wb') as f:
                 f.write(image_response.content)
 
+            delete_file_after_delay(filename)
+
             return filename
 
         else:
@@ -491,6 +526,8 @@ def download_media(url, title):
 
     else:
         print(f"Unsupported media type: {title}")
+
+    delete_file_after_delay(filename)
 
     return filename
 
@@ -528,6 +565,8 @@ def download_reddit_post(post_url):
         with open(zip_filename, "wb") as f:
             f.write(zip_buffer.getvalue())
 
+        delete_file_after_delay(zip_filename)
+
         print(f"✅ ZIP-Datei gespeichert: {zip_filename}")
         return zip_filename
 
@@ -551,6 +590,8 @@ def get_reddit_profile_picture(url):
             with open(filename, "wb") as f:
                 f.write(response.content)
 
+            delete_file_after_delay(filename)
+
             return filename
 
         else:
@@ -569,6 +610,8 @@ def get_reddit_profile_picture(url):
 
                 with open(subreddit_filename, "wb") as f:
                     f.write(img_response.content)
+
+                delete_file_after_delay(subreddit_filename)
 
                 return subreddit_filename
             else:
@@ -591,6 +634,8 @@ def download_pin_image(url):
         for chunk in r.iter_content(8192):
             f.write(chunk)
 
+    delete_file_after_delay(filename)
+
     return filename
 
 
@@ -606,6 +651,9 @@ def download_pinterest_video(video_url):
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([video_url])
     print("✅ Video fertig")
+
+    delete_file_after_delay(filename)
+
     return filename
 
 
@@ -633,6 +681,8 @@ def get_pinterest_media(pinterest_url):
         print("🖼️ Bild gefunden")
         filename = download_pin_image(image_url)
 
+    delete_file_after_delay(filename)
+
     return filename
     print("⚠️ Kein Bild oder Video gefunden")
 
@@ -655,6 +705,9 @@ def download_profile_picture_pinterest(profile_url):
             img_data = requests.get(img_url).content
             with open(filename, "wb") as f:
                 f.write(img_data)
+
+            delete_file_after_delay(filename)
+
             print(f"✅ Gespeichert als {filename}")
             return filename
 
@@ -665,6 +718,18 @@ def download_profile_picture_pinterest(profile_url):
     except Exception as e:
         print(e)
         return None
+
+
+def delete_file_after_delay(filename, delay=25):
+    def delete_file():
+        time.sleep(delay)
+        if os.path.exists(filename):
+            os.remove(filename)
+            print(f"Datei {filename} wurde gelöscht.")
+
+    # Starte einen Hintergrund-Thread
+    threading.Thread(target=delete_file, daemon=True).start()
+
 
 
 app = Flask(__name__)
