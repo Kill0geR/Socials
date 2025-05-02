@@ -46,12 +46,15 @@ def youtube_to_mp3(url):
 
 
 def get_twitter_profile_picture(url):
-    options = Options()
-    options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
+    chrome_options = Options()
+    chrome_options.binary_location = "/usr/bin/chromium-browser"
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--headless")
 
-    driver = webdriver.Chrome(options=options)
+    service = Service("/usr/bin/chromedriver")
+
+    driver = webdriver.Chrome(service=service, options=chrome_options)
 
     driver.get(url)
     time.sleep(1.5)
@@ -116,14 +119,15 @@ def download_twitter_videos(url):
 
         finally:
             # Headless Chrome konfigurieren
-            options = Options()
-            options.add_argument("--headless")
-            options.add_argument("--no-sandbox")
-            options.add_argument("--disable-dev-shm-usage")
+            chrome_options = Options()
+            chrome_options.binary_location = "/usr/bin/chromium-browser"
+            chrome_options.add_argument("--no-sandbox")
+            chrome_options.add_argument("--disable-dev-shm-usage")
+            chrome_options.add_argument("--headless")
 
-            # Starte den Browser
-            # driver = webdriver.Chrome(options=options, service=ChromeDriverManager().install())
-            driver = webdriver.Chrome(options=options)
+            service = Service("/usr/bin/chromedriver")
+
+            driver = webdriver.Chrome(service=service, options=chrome_options)
             driver.get(url)
             time.sleep(1.5)
 
@@ -332,12 +336,15 @@ def download_tiktok(url):
 
 
 def download_tiktok_profile_picture(link):
-    options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
+    chrome_options = Options()
+    chrome_options.binary_location = "/usr/bin/chromium-browser"
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--headless")
 
-    driver = webdriver.Chrome(options=options)
+    service = Service("/usr/bin/chromedriver")
+
+    driver = webdriver.Chrome(service=service, options=chrome_options)
 
     driver.get(link)
     time.sleep(1.5)
@@ -409,12 +416,15 @@ def youtube_to_mp4(url, output_path='downloads/Videos'):
 
 def download_facebook_images(post_url):
     try:
-        options = webdriver.ChromeOptions()
-        options.add_argument('--headless')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
+        chrome_options = Options()
+        chrome_options.binary_location = "/usr/bin/chromium-browser"
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--headless")
 
-        driver = webdriver.Chrome(options=options)
+        service = Service("/usr/bin/chromedriver")
+
+        driver = webdriver.Chrome(service=service, options=chrome_options)
         driver.get(post_url)
 
         time.sleep(3)
