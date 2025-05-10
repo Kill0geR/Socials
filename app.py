@@ -247,7 +247,7 @@ def download_insta_images(post_url):
 
         os.rmdir(str(target_file))
 
-        delete_file_after_delay(return_filename)
+        delete_file_after_delay(return_filename, directory=real_folder)
 
         return return_filename
 
@@ -302,7 +302,7 @@ def insta_download_reel(reel_url):
 
         os.rmdir(str(target_folder))
 
-        delete_file_after_delay(mp4_file)
+        delete_file_after_delay(mp4_file, directory=real_folder)
 
         return f"{real_folder}/{mp4_file}"
     except Exception as e:
@@ -322,13 +322,13 @@ def download_tiktok(url):
         filename = f"{change_dir}/{os.listdir()[0]}"
         os.chdir("../../..")
 
-        delete_file_after_delay(filename)
+        delete_file_after_delay(filename, directory=change_dir)
 
         return filename
 
     except Exception as e:
         print(e)
-        os.chdir("../..")
+        os.chdir("../../..")
 
 
 def download_tiktok_profile_picture(link):
@@ -367,7 +367,7 @@ def download_tiktok_profile_picture(link):
 
 def youtube_to_mp4(url, output_path='downloads/Videos'):
     try:
-        yt = YouTube(url)
+        yt = YouTube(url, use_po_token=True)
         video_stream = yt.streams.filter(res="1080p", mime_type="video/mp4", progressive=False).first()
         audio_stream = yt.streams.filter(only_audio=True, mime_type="audio/mp4").first()
 
@@ -400,7 +400,7 @@ def youtube_to_mp4(url, output_path='downloads/Videos'):
 
         delete_file_after_delay(final_path)
 
-        return final_path
+        return f"{output_path}/{filename}"
 
     except Exception as e:
         print(e)
@@ -720,12 +720,16 @@ def download_profile_picture_pinterest(profile_url):
         return None
 
 
-def delete_file_after_delay(filename, delay=25):
+def delete_file_after_delay(filename, delay=25, directory=None):
     def delete_file():
         time.sleep(delay)
-        if os.path.exists(filename):
+        if os.path.exists(filename) and not directory:
             os.remove(filename)
             print(f"Datei {filename} wurde gelöscht.")
+
+        else:
+            print(directory)
+            shutil.rmtree(directory)
 
     # Starte einen Hintergrund-Thread
     threading.Thread(target=delete_file, daemon=True).start()

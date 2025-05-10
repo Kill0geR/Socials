@@ -374,7 +374,7 @@ def download_tiktok_profile_picture(link):
 
 def youtube_to_mp4(url, output_path='downloads/Videos'):
     try:
-        yt = YouTube(url)
+        yt = YouTube(url, use_po_token=True)
         video_stream = yt.streams.filter(res="1080p", mime_type="video/mp4", progressive=False).first()
         audio_stream = yt.streams.filter(only_audio=True, mime_type="audio/mp4").first()
 
@@ -407,7 +407,7 @@ def youtube_to_mp4(url, output_path='downloads/Videos'):
 
         delete_file_after_delay(final_path)
 
-        return final_path
+        return f"{output_path}/{filename}"
 
     except Exception as e:
         print(e)
@@ -812,4 +812,4 @@ def download(platform):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
+    app.run(host="127.0.0.1", port=8080)
