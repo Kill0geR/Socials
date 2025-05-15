@@ -367,7 +367,7 @@ def download_tiktok_profile_picture(link):
 
 def youtube_to_mp4(url, output_path='downloads/Videos'):
     try:
-        yt = YouTube(url, use_po_token=True)
+        yt = YouTube(url)
         video_stream = yt.streams.filter(res="1080p", mime_type="video/mp4", progressive=False).first()
         audio_stream = yt.streams.filter(only_audio=True, mime_type="audio/mp4").first()
 
@@ -455,7 +455,7 @@ def download_facebook_images(post_url):
     except Exception as e:
         print(f"Fehler bei Bilder {e}")
         driver.quit()
-        return
+        return None
 
 
 def download_facebook_reels(url):
@@ -779,30 +779,31 @@ def download_file(filename):
 
 @app.route("/download/<platform>", methods=["POST"])
 def download(platform):
-    link = request.form.get("link")
-    format = request.form.get("format")
+    try:
+        link = request.form.get("link")
+        format = request.form.get("format")
 
-    all_functions = {"insta_profile_picture": download_instagram_profile_picture, "yt_mp4": youtube_to_mp4,
-                     "tik_profile_picture": download_tiktok_profile_picture, "insta_reels": insta_download_reel,
-                     "tik_videos": download_tiktok, "yt_mp3": youtube_to_mp3,
-                     "insta_photos": download_insta_images, "twitter_videos": download_twitter_videos,
-                     "twitter_profile_picture": get_twitter_profile_picture, "face_profile_picture": get_facebook_profile_picture,
-                     "face_reels": download_facebook_reels, "face_photos": download_facebook_images, "reddit_profile_pic": get_reddit_profile_picture,
-                     "reddit_photos": download_reddit_post, "pin_profile_pic": download_profile_picture_pinterest,
-                     "pin_media": get_pinterest_media}
+        all_functions = {"insta_profile_picture": download_instagram_profile_picture, "yt_mp4": youtube_to_mp4,
+                         "tik_profile_picture": download_tiktok_profile_picture, "insta_reels": insta_download_reel,
+                         "tik_videos": download_tiktok, "yt_mp3": youtube_to_mp3,
+                         "insta_photos": download_insta_images, "twitter_videos": download_twitter_videos,
+                         "twitter_profile_picture": get_twitter_profile_picture, "face_profile_picture": get_facebook_profile_picture,
+                         "face_reels": download_facebook_reels, "face_photos": download_facebook_images, "reddit_profile_pic": get_reddit_profile_picture,
+                         "reddit_photos": download_reddit_post, "pin_profile_pic": download_profile_picture_pinterest,
+                         "pin_media": get_pinterest_media}
 
-    if format in all_functions:
-        filename = all_functions[format](link)
-
-        if not filename:
-            return render_template("error.html")
-
-        return redirect(url_for("download_file", filename=filename))
+        if format in all_functions:
+            filename = all_functions[format](link)
+            return redirect(url_for("download_file", filename=filename))
 
 
-    print(f"Download requested for {platform} with username: {link} and format: {format}")
+        print(f"Download requested for {platform} with username: {link} and format: {format}")
 
-    return redirect(url_for("index"))
+        return redirect(url_for("index"))
+
+    except Exception as e:
+        print(e)
+        return render_template("error.html")
 
 
 if __name__ == "__main__":
